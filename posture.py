@@ -2,6 +2,7 @@ import cv2
 import mediapipe as mp
 import numpy as np
 import os
+import Quartz
 
 # Initialize MediaPipe Pose
 mp_pose = mp.solutions.pose
@@ -27,7 +28,19 @@ def calculate_angle(a, b, c):
         angle = 360 - angle
     return angle
 
+def is_screen_locked():
+    """Check if the screen is locked (display is off)."""
+    # Get display status using psutil
+    d = Quartz.CGSessionCopyCurrentDictionary()
+    if 'CGSSessionScreenIsLocked' in d.keys():
+        return True
+    return False
+
 while cap.isOpened():
+    if is_screen_locked():
+        print("Screen is locked. Exiting...")
+        break
+    
     ret, frame = cap.read()
     if not ret:
         break
@@ -59,8 +72,8 @@ while cap.isOpened():
 
         # Calculate the angle between shoulders and hips
         angle = calculate_angle(shoulder_left, nose, shoulder_right)
-        print(count)
-        print(shoulder_left,shoulder_right, angle)
+        # print(count)
+        # print(shoulder_left,shoulder_right, angle)
         if angle > upper_angle_limit or angle < lower_angle_limit  and count < max_count:
             count+=1
         # Alert if the angle suggests slouching (experiment with angle thresholds)
